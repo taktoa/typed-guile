@@ -24,6 +24,14 @@
 
 ## Type system
 
+### Continuations
+
+* Luckily, `call-with-current-continuation` is quite rare in Guile.
+  * It is only used a few times in the Guile compiler.
+* Delimited continuations (as defined in `(ice-9 control)`) are, however, used
+  quite a few times.
+* Perhaps we could type these with the [Cont monad][cont-monad].
+
 ### Typeclasses
 
 * Relevant papers:
@@ -99,7 +107,7 @@
 [idris-uniq]:
   http://idris.readthedocs.org/en/latest/reference/uniqueness-types.html
 [idris-alg]:
-  https://eb.host.cs.st-andrews.ac.uk/drafts/effects.pdf
+  http://eb.host.cs.st-andrews.ac.uk/drafts/effects.pdf
 [polyvariadic]:
   http://okmij.org/ftp/Haskell/polyvariadic.html
 [boxes]:
@@ -128,3 +136,5 @@
   http://hackage.haskell.org/package/derp
 [prof-type]:
   http://www.cs.umd.edu/projects/PL/druby/papers/druby-tr-4935.pdf
+[cont-monad]:
+  http://hackage.haskell.org/package/mtl/docs/Control-Monad-Cont.html
