@@ -81,6 +81,7 @@
   * Porting [boxes][], [vty-ui][], or [brick][] could also be useful.
 * Profile-guided after-the-fact typing would be very useful for translating the
   Guile compiler (and other untyped Guile libraries) to Typed Guile.
+  * [Profile-Guided Static Typing for Dynamic Scripting Languages][prof-type]
 * We should have automatic tools for translating [Haskell][], [Typed Racket][], 
   [Typed Clojure][], [SML][], and [OCaml][] to Typed Guile (or, at the very 
   least, have tools for importing type signatures).
@@ -125,3 +126,5 @@
   http://caml.inria.fr/pub/docs/manual-ocaml/
 [derp]:
   http://hackage.haskell.org/package/derp
+[prof-type]:
+  http://www.cs.umd.edu/projects/PL/druby/papers/druby-tr-4935.pdf
