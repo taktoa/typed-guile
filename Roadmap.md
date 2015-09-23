@@ -1,3 +1,5 @@
+<!-- -*- mode: markdown; coding: utf-8 -*- -->
+
 # Roadmap
 
 ## Phase 1 - Implementation in Haskell
@@ -50,6 +52,7 @@
   * [RWH: Monad Transformers][rwh-monad-transformers]
   * [Extensible Effects: An Alternative to Monad Transformers][exteff]
   * [Freer Monads, More Extensible Effects][more-exteff]
+  * [The effects package in Hackage][hackage-effects]
 
 ## Typing Guile semantics
 
@@ -93,6 +96,9 @@
 * We should have automatic tools for translating [Haskell][], [Typed Racket][], 
   [Typed Clojure][], [SML][], and [OCaml][] to Typed Guile (or, at the very 
   least, have tools for importing type signatures).
+* A Guile project generator, à la `cabal init`, would be very nice.
+  * It should generate all of the following files:
+    * 
 
 [Tandoori]:
   http://gergo.erdi.hu/projects/tandoori/
@@ -127,7 +133,7 @@
 [Typed Racket]:
   http://docs.racket-lang.org/ts-guide/index.html
 [Typed Clojure]:
-  https://github.com/clojure/core.typed
+  http://github.com/clojure/core.typed
 [SML]:
   http://sml-family.org
 [OCaml]:
@@ -138,3 +144,5 @@
   http://www.cs.umd.edu/projects/PL/druby/papers/druby-tr-4935.pdf
 [cont-monad]:
   http://hackage.haskell.org/package/mtl/docs/Control-Monad-Cont.html
+[hackage-effects]:
+  http://hackage.haskell.org/package/effects
