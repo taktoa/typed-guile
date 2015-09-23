@@ -1,104 +1,104 @@
-<!-- -*- mode: markdown; coding: utf-8 -*- -->
+<!-- --- mode: markdown; coding: utf-8 --- -->
 
 # Roadmap
 
 ## Phase 1 - Implementation in Haskell
 
-* Write a type checker for Guile in Haskell.
-  * Fix [Tandoori][] such that it can successfully typecheck Haskell.
+- Write a type checker for Guile in Haskell.
+  - Fix [Tandoori][] such that it can successfully typecheck Haskell.
 
 ## Phase 2 - Porting to Typed Guile
 
-* Port the type checker to Typed Guile.
+- Port the type checker to Typed Guile.
 
 ## Phase 3 - Guile Compiler Integration
 
-* Integrate the Guile typechecker into the Guile compiler.
-* Port the Guile compiler to Typed Guile.
-* Typed Guile should be self-hosting at this point.
+- Integrate the Guile typechecker into the Guile compiler.
+- Port the Guile compiler to Typed Guile.
+- Typed Guile should be self-hosting at this point.
 
 # Design Decisions
 
 ## Parsing
 
-* We should use [derivative parsers][derp] in general (though we will probably
+- We should use [derivative parsers][derp] in general (though we will probably
   wait until we have ported, i.e.: after phase 2).
 
 ## Type system
 
 ### Continuations
 
-* Luckily, `call-with-current-continuation` is quite rare in Guile.
-  * It is only used a few times in the Guile compiler.
-* Delimited continuations (as defined in `(ice-9 control)`) are, however, used
+- Luckily, `call-with-current-continuation` is quite rare in Guile.
+  - It is only used a few times in the Guile compiler.
+- Delimited continuations (as defined in `(ice-9 control)`) are, however, used
   quite a few times.
-* Perhaps we could type these with the [Cont monad][cont-monad].
+- Perhaps we could type these with the [Cont monad][cont-monad].
 
 ### Typeclasses
 
-* Relevant papers:
-  * [Maintainable Type Classes for Haskell][maintain-tc]
+- Relevant papers:
+  - [Maintainable Type Classes for Haskell][maintain-tc]
 
 ### Effects
 
-* Should we go with monadic IO or uniqueness typing?
-* For layering of effects, should we use monad transformers, algebraic effects,
+- Should we go with monadic IO or uniqueness typing?
+- For layering of effects, should we use monad transformers, algebraic effects,
   or extensible effects?
-* What are the tradeoffs here vis-à-vis usability, learnability, expressiveness,
+- What are the tradeoffs here vis-à-vis usability, learnability, expressiveness,
   type system complexity?
-* Relevant papers:
-  * [Algebraic Effects in Idris][idris-alg]
-  * [Uniqueness Types in Idris][idris-uniq]
-  * [RWH: Monad Transformers][rwh-monad-transformers]
-  * [Extensible Effects: An Alternative to Monad Transformers][exteff]
-  * [Freer Monads, More Extensible Effects][more-exteff]
-  * [The effects package in Hackage][hackage-effects]
+- Relevant papers:
+  - [Algebraic Effects in Idris][idris-alg]
+  - [Uniqueness Types in Idris][idris-uniq]
+  - [RWH: Monad Transformers][rwh-monad-transformers]
+  - [Extensible Effects: An Alternative to Monad Transformers][exteff]
+  - [Freer Monads, More Extensible Effects][more-exteff]
+  - [The effects package in Hackage][hackage-effects]
 
 ## Typing Guile semantics
 
 ### Functions
 
-* Should functions be curried in the type system, despite not being curried in 
+- Should functions be curried in the type system, despite not being curried in 
   the operational semantics of Scheme?
-* Keyword/Rest Arguments
-  * We should type keyword and rest arguments by translating to HM types.
-  * There are a variety of ways to type keywords and rest arguments, most of
+- Keyword/Rest Arguments
+  - We should type keyword and rest arguments by translating to HM types.
+  - There are a variety of ways to type keywords and rest arguments, most of
     which are listed [here][polyvariadic].
 
 ### Objects
 
-* I think we can mostly type GOOPS classes as being open type classes.
-  * Basically, any time a class is declared, create a type class, and then add
+- I think we can mostly type GOOPS classes as being open type classes.
+  - Basically, any time a class is declared, create a type class, and then add
     a method to that type class for every unique generic method that takes a
     thing with that type.
-  * Whenever you encounter polymorphism (i.e.: two generic methods with the same
+  - Whenever you encounter polymorphism (i.e.: two generic methods with the same
     name and different types), encode that as an instance of the typeclass.
-  * It may actually be worth it to expose open type classes as a user-accessible
+  - It may actually be worth it to expose open type classes as a user-accessible
     feature outside of type system hackery.
 
 ## Other decisions
 
 ### Modules
 
-* Should we bother typing modules?
-* The [1ML system][] is rather promising for typing modules.
+- Should we bother typing modules?
+- The [1ML system][] is rather promising for typing modules.
 
 ### Tooling
 
-* We should fix [guile-lint][guile-lint]
-* We should make a usable terminal UI for Guile, à la [Elm][elm-errors].
-  * It would be neat to make it even fancier with a powerline-style top bar.
-  * Writing a library for ANSI colors etc. in Guile would be useful.
-  * Porting [boxes][], [vty-ui][], or [brick][] could also be useful.
-* Profile-guided after-the-fact typing would be very useful for translating the
+- We should fix [guile-lint][guile-lint]
+- We should make a usable terminal UI for Guile, à la [Elm][elm-errors].
+  - It would be neat to make it even fancier with a powerline-style top bar.
+  - Writing a library for ANSI colors etc. in Guile would be useful.
+  - Porting [boxes][], [vty-ui][], or [brick][] could also be useful.
+- Profile-guided after-the-fact typing would be very useful for translating the
   Guile compiler (and other untyped Guile libraries) to Typed Guile.
-  * [Profile-Guided Static Typing for Dynamic Scripting Languages][prof-type]
-* We should have automatic tools for translating [Haskell][], [Typed Racket][], 
+  - [Profile-Guided Static Typing for Dynamic Scripting Languages][prof-type]
+- We should have automatic tools for translating [Haskell][], [Typed Racket][], 
   [Typed Clojure][], [SML][], and [OCaml][] to Typed Guile (or, at the very 
   least, have tools for importing type signatures).
-* A Guile project generator, à la `cabal init`, would be very nice.
-  * It should generate all of the following files:
-    * 
+- A Guile project generator, à la `cabal init`, would be very nice.
+  - It should generate all of the following files:
+    - FIXME 
 
 [Tandoori]:
   http://gergo.erdi.hu/projects/tandoori/
