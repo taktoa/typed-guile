@@ -62,6 +62,7 @@
         - [ ] Bitvectors
         - [ ] Bytevectors
         - [ ] Quasiquoting
+          - [Typed quote / antiquote][typed-quote-antiquote]
         - [ ] `*unspecified*`
       - [ ] Polymorphic types
         - [ ] Lists
@@ -486,3 +487,5 @@
   http://github.com/stedolan/mlsub
 [hermit]:
   http://hackage.haskell.org/package/hermit
+[typed-quote-antiquote]:
+  http://www.cs.ox.ac.uk/people/ralf.hinze/publications/Quote.pdf
