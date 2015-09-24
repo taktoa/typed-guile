@@ -327,6 +327,13 @@
   - [Extensible Effects: An Alternative to Monad Transformers][exteff]
   - [Freer Monads, More Extensible Effects][more-exteff]
   - [The effects package in Hackage][hackage-effects]
+  - [Labelled IO][hackage-lio]
+
+### Concurrency
+
+- [Session Types Without Class][session-types-without-class]
+- [Implicit parallelism][implicit-parallelism] is interesting.
+  - Needs higher-order specialization (defunctionalization) to be effective.
 
 ## Typing Guile semantics
 
@@ -349,6 +356,8 @@
     name and different types), encode that as an instance of the typeclass.
   - It may actually be worth it to expose open type classes as a user-accessible
     feature outside of type system hackery.
+- Perhaps we could use [subtypes][subtyping]?
+- Related: [MLsub][mlsub].
 
 ## Other decisions
 
@@ -371,9 +380,15 @@
 - We should have automatic tools for translating [Haskell][], [Typed Racket][], 
   [Typed Clojure][], [SML][], and [OCaml][] to Typed Guile (or, at the very 
   least, have tools for importing type signatures).
+- Proving laws can be improved with [Hermit][hermit].
 - A Guile project generator, à la `cabal init`, would be very nice.
   - It should generate all of the following files:
     - FIXME 
+
+### Misc
+
+- Relevant papers:
+  - [Strong Static Type Checking for Functional Common Lisp][typing-clisp]
 
 [Tandoori]:
   http://gergo.erdi.hu/projects/tandoori/
@@ -421,6 +436,8 @@
   http://hackage.haskell.org/package/mtl/docs/Control-Monad-Cont.html
 [hackage-effects]:
   http://hackage.haskell.org/package/effects
+[hackage-lio]:
+  http://hackage.haskell.org/package/lio
 [guile-bool]:
   http://www.gnu.org/software/guile/manual/html_node/Booleans.html
 [guile-num]:
@@ -448,12 +465,24 @@
 [herbie]:
   http://herbie.uwplse.org
 [herbie-ghc]:
-  https://github.com/mikeizbicki/HerbiePlugin
+  http://github.com/mikeizbicki/HerbiePlugin
 [GADTs meet their match]:
   http://research.microsoft.com/en-us/um/people/simonpj/papers/pattern-matching/gadtpm.pdf
 [z3-prover]:
-  https://github.com/Z3Prover/z3
+  http://github.com/Z3Prover/z3
 [rosette]:
   http://homes.cs.washington.edu/~emina/rosette/guide/index.html
 [Backpack]:
   http://plv.mpi-sws.org/backpack
+[implicit-parallelism]:
+  http://www.youtube.com/watch?v=UsU8h0WYemo
+[subtyping]:
+  http://www21.in.tum.de/~nipkow/pubs/aplas11.pdf
+[typing-clisp]:
+  ftp://ftp.cs.utexas.edu/pub/boyer/diss/akers.pdf
+[session-types-without-class]:
+  http://users.eecs.northwestern.edu/~jesse/pubs/haskell-session-types/session08.pdf
+[mlsub]:
+  http://github.com/stedolan/mlsub
+[hermit]:
+  http://hackage.haskell.org/package/hermit
