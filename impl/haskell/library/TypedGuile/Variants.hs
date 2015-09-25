@@ -23,7 +23,7 @@ data Fix ε = In (ε (Fix ε))
 
 data (f ⊕ g) ε = InL (f ε) | InR (g ε)
 
-(▽) :: (φ1 ε  → α) → (φ2 ε → α) → (φ1 ⊕ φ2) ε → α
+(▽) ∷ (φ1 ε  → α) → (φ2 ε → α) → (φ1 ⊕ φ2) ε → α
 (f ▽ _) (InL x) = f x
 (_ ▽ g) (InR x) = g x
 
@@ -53,24 +53,24 @@ type family Ifi lP inR rP inL where
   Ifi lP inR rP inL = N
 
 class Inj f g p where
-  injP :: p → f e → g e
+  injP ∷ p → f e → g e
 
 instance Inj f f Refl where
   injP _ = id
 
 instance Inj f g p => Inj f (g ⊕ h) (L p) where
-  injP (_ :: L p) = InL . injP (undefined :: p)
+  injP (_ ∷ L p) = InL . injP (undefined ∷ p)
 
 instance Inj f h p => Inj f (g ⊕ h) (R p) where
-  injP (_ :: R p) = InR . injP (undefined :: p)
+  injP (_ ∷ R p) = InR . injP (undefined ∷ p)
 
-inj :: forall f g e . (Inj f g (Into f g)) => f e → g e
-inj = injP (undefined :: Into f g)
+inj ∷ forall f g e . (Inj f g (Into f g)) => f e → g e
+inj = injP (undefined ∷ Into f g)
 
-data OnL (h :: * → *)
-data OnR (h :: * → *)
-data Le  (g :: * → *) p
-data Ri  (f :: * → *) p
+data OnL (h ∷ * → *)
+data OnR (h ∷ * → *)
+data Le  (g ∷ * → *) p
+data Ri  (f ∷ * → *) p
 data Found
 
 type family Minus f g where
@@ -101,26 +101,24 @@ data CN ε -- noop
 
 type α × β = (α, β)
 
-
 -- Conveniences for writing coproducts of multiple types
 type Σ1 ε1          κ = ε1                ⊕ κ
 type Σ2 ε1 ε2       κ = ε1 ⊕ ε2           ⊕ κ
 type Σ3 ε1 ε2 ε3    κ = ε1 ⊕ ε2 ⊕ ε3      ⊕ κ
 type Σ4 ε1 ε2 ε3 ε4 κ = ε1 ⊕ ε2 ⊕ ε3 ⊕ ε4 ⊕ κ
 
-
 -- Convenience for fixed-point
 type FExpr α ε = Expr α (Fix ε)
 
 data Expr α e where
-  ELift ::  α                                     → FExpr α        CL
-  ELam  :: (FExpr α ε1 → FExpr β ε2)              → FExpr (α → β) (Σ2 ε1 ε2 Cλ)
-  ETup  ::  FExpr α ε1               → FExpr β ε2 → FExpr (α × β) (Σ2 ε1 ε2 Cx)
-  EApp  ::  FExpr (α → β) ε1         → FExpr α ε2 → FExpr β       (Σ2 ε1 ε2 Cβ)
-  ENoop ::  FExpr α ε                             → FExpr α       (ε ⊕ CN)
+  ELift ∷  α                                     → FExpr α        CL
+  ELam  ∷ (FExpr α ε1 → FExpr β ε2)              → FExpr (α → β) (Σ2 ε1 ε2 Cλ)
+  ETup  ∷  FExpr α ε1               → FExpr β ε2 → FExpr (α × β) (Σ2 ε1 ε2 Cx)
+  EApp  ∷  FExpr (α → β) ε1         → FExpr α ε2 → FExpr β       (Σ2 ε1 ε2 Cβ)
+  ENoop ∷  FExpr α ε                             → FExpr α       (ε ⊕ CN)
 
-removeNoop :: FExpr α ε → Expr α (ε ⊖ CN)
+removeNoop ∷ FExpr α ε → Expr α (ε ⊖ CN)
 removeNoop = undefined
 
-main :: IO ()
+main ∷ IO ()
 main = return ()
