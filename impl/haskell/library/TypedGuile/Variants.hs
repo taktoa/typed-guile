@@ -1,10 +1,8 @@
-{-# LANGUAGE DeriveFunctor         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
@@ -27,71 +25,83 @@ data (f ⊕ g) ε = InL (f ε) | InR (g ε)
 (f ▽ _) (InL x) = f x
 (_ ▽ g) (InR x) = g x
 
-type family IsIn f g where
-  IsIn f f       = Y
-  IsIn f (g ⊕ h) = Or (IsIn f g) (IsIn f h)
-  IsIn f g       = Y
+type family IsIn φ1 φ2 where
+  IsIn φ1 φ1        = Y
+  IsIn φ1 (φ2 ⊕ φ3) = Or (IsIn φ1 φ2) (IsIn φ1 φ3)
+  IsIn φ1 φ2        = Y
 
-type family Or b c where
+type family Or α β where
   Or N N = N
-  Or b c = Y
+  Or α β = Y
 
 data Refl
-data L x
-data R x
+data L α
+data R α
 
-type family Into f g where
-  Into f f       = Refl
-  Into f (g ⊕ h) = Ifi (Into f g) (IsIn f h)
-                       (Into f h) (IsIn f g)
-  Into f g       = N
+-- γ = leftP
+-- ς = inLeft
+-- δ = rightP
+-- τ = inRight
+type family IfInj γ τ δ ς where
+  IfInj N τ N ς = N
+  IfInj N τ δ N = R δ
+  IfInj γ N δ ς = L γ
+  IfInj γ τ δ ς = N
 
-type family Ifi lP inR rP inL where
-  Ifi N  inR N  inL = N
-  Ifi N  inR rP N   = R rP
-  Ifi lP N   rP inL = L lP
-  Ifi lP inR rP inL = N
+type family Into φ1 φ2 where
+  Into φ1 φ1        = Refl
+  Into φ1 (φ2 ⊕ φ3) = IfInj (Into φ1 φ2) (IsIn φ1 φ3)
+                            (Into φ1 φ3) (IsIn φ1 φ2)
+  Into φ1 φ2        = N
 
-class Inj f g p where
-  injP ∷ p → f e → g e
+class Inj φ1 φ2 π where
+  injP ∷ π → φ1 ε → φ2 ε
 
-instance Inj f f Refl where
+instance Inj φ φ Refl where
   injP _ = id
 
-instance Inj f g p => Inj f (g ⊕ h) (L p) where
-  injP (_ ∷ L p) = InL . injP (undefined ∷ p)
+instance Inj φ1 φ2 π => Inj φ1 (φ2 ⊕ φ3) (L π) where
+  injP (_ ∷ L π) = InL . injP (undefined ∷ π)
 
-instance Inj f h p => Inj f (g ⊕ h) (R p) where
-  injP (_ ∷ R p) = InR . injP (undefined ∷ p)
+instance Inj φ1 φ3 π => Inj φ1 (φ2 ⊕ φ3) (R π) where
+  injP (_ ∷ R π) = InR . injP (undefined ∷ π)
 
-inj ∷ forall f g e . (Inj f g (Into f g)) => f e → g e
-inj = injP (undefined ∷ Into f g)
+inj ∷ ∀ φ1 φ2 ε . (Inj φ1 φ2 (Into φ1 φ2)) => φ1 ε → φ2 ε
+inj = injP (undefined ∷ Into φ1 φ2)
 
-data OnL (h ∷ * → *)
-data OnR (h ∷ * → *)
-data Le  (g ∷ * → *) p
-data Ri  (f ∷ * → *) p
+data OnL (φ ∷ * → *)
+data OnR (φ ∷ * → *)
+data Le  (φ ∷ * → *) π
+data Ri  (φ ∷ * → *) π
 data Found
 
-type family Minus f g where
-  Minus f       f = N
-  Minus (f ⊕ g) f = OnL g
-  Minus (f ⊕ g) g = OnR f
-  Minus (f ⊕ g) h = Ifm g (Minus f h) (IsIn f g) f (Minus g h) (IsIn f h)
-  Minus f       g = Found
+type family Minus φ1 φ2 where
+  Minus φ1        φ1 = N
+  Minus (φ1 ⊕ φ2) φ1 = OnL φ2
+  Minus (φ1 ⊕ φ2) φ2 = OnR φ1
+  Minus (φ1 ⊕ φ2) φ3 = IfMinus φ2 (φ1 ⊖ φ3) (φ1 ∈ φ2) φ1 (φ2 ⊖ φ3) (φ1 ∈ φ3)
+  Minus φ1        φ2 = Found
 
-type family Ifm g lP inR f rP inL where
-  Ifm g N  inR f N  inL = N
-  Ifm g N  inR f rP N   = OnR f
-  Ifm g lP N   f rP inL = OnL g
+type family IfMinus φ2 γ τ φ1 δ ς where
+  IfMinus φ2 N τ φ1 N ς = N
+  IfMinus φ2 N τ φ1 δ N = OnR φ1
+  IfMinus φ2 γ N φ1 δ ς = OnL φ2
 
-type family OutOf p where
-  OutOf (OnL x)  = x
-  OutOf (OnR x)  = x
-  OutOf (Le f p) = OutOf p ⊕ f
-  OutOf (Ri f p) = f ⊕ OutOf p
+type family OutOf π where
+  OutOf (OnL α)  = α
+  OutOf (OnR α)  = α
+  OutOf (Le φ π) = OutOf π ⊕ φ
+  OutOf (Ri φ π) = φ ⊕ OutOf π
 
+-- Infix versions of Minus and IsIn
 type ε1 ⊖ ε2 = Minus ε1 ε2
+type ε1 ∈ ε2 = IsIn  ε1 ε2
+
+-- Conveniences for writing coproducts of multiple types
+type Σ1 ε1          κ = ε1                ⊕ κ
+type Σ2 ε1 ε2       κ = ε1 ⊕ ε2           ⊕ κ
+type Σ3 ε1 ε2 ε3    κ = ε1 ⊕ ε2 ⊕ ε3      ⊕ κ
+type Σ4 ε1 ε2 ε3 ε4 κ = ε1 ⊕ ε2 ⊕ ε3 ⊕ ε4 ⊕ κ
 
 data CL ε -- lift
 data Cλ ε -- lambda
@@ -100,12 +110,6 @@ data Cβ ε -- application
 data CN ε -- noop
 
 type α × β = (α, β)
-
--- Conveniences for writing coproducts of multiple types
-type Σ1 ε1          κ = ε1                ⊕ κ
-type Σ2 ε1 ε2       κ = ε1 ⊕ ε2           ⊕ κ
-type Σ3 ε1 ε2 ε3    κ = ε1 ⊕ ε2 ⊕ ε3      ⊕ κ
-type Σ4 ε1 ε2 ε3 ε4 κ = ε1 ⊕ ε2 ⊕ ε3 ⊕ ε4 ⊕ κ
 
 -- Convenience for fixed-point
 type FExpr α ε = Expr α (Fix ε)
