@@ -15,11 +15,11 @@
 -- | Extensible variants for small-pass compilation.
 --   Based on the work in "Variations on Variants" by J. Garret Morris
 --   <http://homepages.inf.ed.ac.uk/jmorri14/pubs/morris-haskell15-variants.pdf>
-module Variants ( Fix (..)
-                , (:⊕:), (:⊘:)
-                , Σ1, Σ2, Σ3, Σ4
-                , (▽), inj
-                ) where
+module TypedGuile.Variants ( Fix (..)
+                           , (:⊕:), (:⊘:)
+                           , Σ1, Σ2, Σ3, Σ4
+                           , (▽), inj
+                           ) where
 
 
 --------------------------------------------------------------------------------
