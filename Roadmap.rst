@@ -407,7 +407,7 @@ Phase 5 – Tooling
    http://github.com/Z3Prover/z3
 .. _Rosette:
    http://homes.cs.washington.edu/~emina/rosette/guide/index.html
-.. _`Catch: Case Totality Checker for Haskell`:
+.. _Catch\: Case Totality Checker for Haskell:
    http://community.haskell.org/~ndm/catch/
 .. _Herbie:
    http://herbie.uwplse.org
@@ -642,9 +642,9 @@ Effects
    http://eb.host.cs.st-andrews.ac.uk/drafts/effects.pdf
 .. _Uniqueness Types in Idris:
    http://idris.readthedocs.org/en/latest/reference/uniqueness-types.html
-.. _`RWH: Monad Transformers`:
+.. _RWH\: Monad Transformers:
    http://book.realworldhaskell.org/read/monad-transformers.html#id6594
-.. _`Extensible Effects: An Alternative to Monad Transformers`:
+.. _Extensible Effects\: An Alternative to Monad Transformers:
    http://okmij.org/ftp/Haskell/extensible/exteff.pdf
 .. _Freer Monads, More Extensible Effects:
    http://okmij.org/ftp/Haskell/extensible/more.pdf
@@ -786,12 +786,13 @@ Misc
       (get-info :all-statistics)
       (get-unsat-core)
 
-
-
-
-
 .. _Strong Static Type Checking for Functional Common Lisp:
-   ftp://ftp.cs.utexas.edu/pub/boyer/diss/akers.pdf
+   http://www.cs.utexas.edu/users/boyer/ftp/diss/akers.pdf
+
+
+
+.. Miscellaneous leftovers
+
 .. _compdata:
    http://hackage.haskell.org/package/compdata
 .. _typeclass-impl:
