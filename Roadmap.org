@@ -1,8 +1,20 @@
-<!-- -*- mode: markdown; coding: utf-8 -*- -->
+# -*- mode: org; coding: utf-8 -*-
 
-# Roadmap
+* Roadmap
 
-## Phase 1 – Implementation in Haskell
+** Phase 1 – Implementation in Haskell
+
+```
+(set-option :produce-unsat-cores true)
+(declare-const a Int)
+(declare-const b Int)
+(assert (! (> a 10) :named greater))
+(assert (! (< a 10) :named lesser))
+(assert (! (= b 5) :named lol))
+(check-sat)
+(get-info :all-statistics)
+(get-unsat-core)
+```
 
 - [ ] Write a type checker for Guile in Haskell.
   - [ ] Fix [Tandoori][] such that it can successfully typecheck Haskell.
@@ -16,8 +28,8 @@
           fully-qualified (vis-à-vis modules) unique identifiers
     - [ ] Write normalizers for various built-in types using GOOPS `class-of`
       - [ ] [Booleans][guile-bool]:
-        - `#t –> (@class@ <boolean> #t)`
-        - `#f –> (@class@ <boolean> #f)`
+        - ~#t –> (@class@ <boolean> #t)~
+        - ~#f –> (@class@ <boolean> #f)~
       - [ ] [Numbers][guile-num]:
         - [ ] `534 –> (@class@ <integer> 534)`
         - [ ] `5/6 –> (@class@ <fraction> 5/6)`
@@ -37,7 +49,7 @@
       - [ ] [Bytevectors][guile-bv]:
         - `#vu8(1 53 204) –> (@class@ <bytevector> 1 53 204)`
       - [ ] [Bitvectors][guile-bits]:
-        - `#*10101 –> (@class@ <bitvector> #b10101)`
+        - `#*10101 –> (@class@ <bitvector> #*10101)`
       - [ ] Docstrings: run the `texinfo` parser on all docstrings.
     - [ ] Write test cases for the normalizer using SRFI-64.
   - [ ] Write a Haskell module that launches Guile to normalize an input string.
@@ -49,7 +61,7 @@
   - [ ] Wire together the Tandoori code and the typed Guile AST.
   - [ ] Successfully type basic arithmetic expressions in Guile.
 
-## Phase 2 – Type System Work
+** Phase 2 – Type System Work
 
   - [ ] Write typing judgments and test cases for a lot of code.
   - Benchmarks:
@@ -264,17 +276,17 @@
       - [ ] `(ice-9 vlist)`
       - [ ] `(ice-9 weak-vector)`
 
-## Phase 3 – Porting to Typed Guile
+** Phase 3 – Porting to Typed Guile
 
 - [ ] Port the type checker to Typed Guile.
 
-## Phase 4 – Guile Compiler Integration
+** Phase 4 – Guile Compiler Integration
 
 - [ ] Integrate the Guile typechecker into the Guile compiler.
 - [ ] Port the Guile compiler to Typed Guile.
 - Typed Guile should be self-hosting at this point.
 
-## Phase 5 – Tooling
+** Phase 5 – Tooling
 
 - [ ] Make an exhaustiveness checker for pattern matching.
   - [GADTs meet their match][]
@@ -292,11 +304,11 @@
 - [ ] Fix [guile-lint][].
 - [ ] Make profile-guided typing tool.
 
-# Design Decisions
+* Design Decisions
 
-## Architecture
+** Architecture
 
-### Parsing
+*** Parsing
 
 - We should use [derivative parsers][derp] in general (though we will probably
   wait until we have ported, i.e.: after phase 2).
@@ -304,9 +316,9 @@
   - It would be cool to have something like megaparsec, but based on derivative
     parsing, though it's not clear what the tradeoffs are there.
 
-### Compilation
+*** Compilation
 
-#### Nanopass Compilation
+**** Nanopass Compilation
 
 - We should use a "nanopass"-style compiler, with many small passes rather than
   a few large, complex passes.
@@ -323,31 +335,111 @@
     - [Data Types à la Carte][data-types-a-la-carte]
     - [Variations on Variants][variations-on-variants]
 
-#### Passes
+**** Passes
 
-- We start with a `ByteString` read in by the system.
+- We start with a ~ByteString~ read in by the system.
+- This ~ByteString~ consists of the contents of every 
 - The `…` means that the input type is the same as the output type of the last
   pass performed.
 
-+--------------------+--------------------+-----------------------------------+
-|Name                | Type               |  Description                      |
-+====================+====================+===================================+
-| Text normalization | `… → Text`         | Convert the given bytes to        |
-|                    |                    | Unicode (UTF-8, preferably) text. |
-+--------------------+--------------------+-----------------------------------+
-| Tokenization       | `… → [Token]`      | Split the given text into tokens  |
-|                    |                    | representing syntax.              |
-+--------------------+--------------------+-----------------------------------+
-| Parsing            | `… → Tree GValue`  | Generate an untyped AST from the  |
-|                    |                    | token list.                       |
-+--------------------+--------------------+-----------------------------------+
-| Annotation reading | `… → AST`          | Read Guile-provided annotations   |
-|                    |                    | to create a (somewhat) typed AST. |
-+--------------------+--------------------+-----------------------------------+
+|--------------------+---------------+-----------------------------------------|
+| Name               | Type          | Description                             |
+|--------------------+---------------+-----------------------------------------|
+| Read input files   | ~[BS]~        | Read the given source file and all      |
+|                    |               | source files in the current load        |
+|                    |               | path. Laziness will be good here;       |
+|                    |               | if we strictly read the main file       |
+|                    |               | but lazily read all the other files,    |
+|                    |               | we will be able to avoid the memory,    |
+|                    |               | IO, and CPU cost of reading every       |
+|                    |               | file in the load path when only a       |
+|                    | *IO*          | fraction will actually be requested.    |
+|--------------------+---------------+-----------------------------------------|
+| Format heuristics  | ~(BS, Codec)~ | Speculatively decode the file and       |
+|                    |               | search for an Emacs-style coding        |
+|                    |               | attribute. If found, determine the      |
+|                    |               | corresponding codec and attach it       |
+|                    |               | to the given ~ByteString~.              |
+|                    |               |                                         |
+|                    |               | Otherwise, use other heuristics to      |
+|                    |               | figure out the file format.             |
+|                    |               |                                         |
+|                    |               | If all else fails, error and ask        |
+|                    |               | the user to provide an Emacs            |
+|                    | *Analysis*    | coding attribute.                       |
+|--------------------+---------------+-----------------------------------------|
+| Text decoding      | ~UTF-8~       | Decode the given bytes to UTF-8.        |
+|                    | *Transform*   |                                         |
+|--------------------+---------------+-----------------------------------------|
+| Unicode expansion  | ~UTF-32~      | Expand UTF-8 to a good fixed-width      |
+|                    |               | encoding like UTF-32, so location       |
+|                    | *Transform*   | analysis will be far easier.            |
+|--------------------+---------------+-----------------------------------------|
+| Tokenization       | ~[Token]~     | Split the given text into tokens        |
+|                    | *Transform*   | representing syntax.                    |
+|--------------------+---------------+-----------------------------------------|
+| Location analysis  | ~[LToken]~    | Annotate each token with a source       |
+|                    | *Transform*   | location or range.                      |
+|--------------------+---------------+-----------------------------------------|
+| Parsing            | ~AST~         | Generate an AST equivalent to the sexpr |
+|                    |               | of the Guile source, except with token  |
+|                    |               | location information added.             |
+|                    | *Transform*   |                                         |
+|--------------------+---------------+-----------------------------------------|
+| Quasiquote desugar | ~AST~         | Replace all uses of `(unquote ...)` and |
+|                    | *Desugar*     | `(quasiquote ...)` with the equivalent  |
+|                    |               | uses of `(list ...)`.                   |
+|--------------------+---------------+-----------------------------------------|
 
-## Type system
+|--------------------+---------------+-----------------------------------------|
+| Primitive macro    | ~AST~         | Find all macros defined with the macro  |
+| detection          |               | creation primitives, and replace them   |
+|                    |               | with ~Macro~ structures, and add them   |
+|                    |               | to a global list of macros.             |
+|                    |               |                                         |
+|                    | *Transform*   | Default the macros to Phase 2 eval.     |
+|--------------------+---------------+-----------------------------------------|
+| Meta-macro         | ~AST~         | Set all macros that contain a macro     |
+| detection          |               | creation primitive in their definitions |
+|                    | *Transform*   | to Phase 1 evaluation.                  |
+|--------------------+---------------+-----------------------------------------|
+|--------------------+---------------+-----------------------------------------|
+| Binder detection   | ~AST~         |                                         |
+|--------------------+---------------+-----------------------------------------|
+| Binder annotation  | ~AST~         | Any time a variable is introduced       |
+|                    |               | or referenced, add a tag showing        |
+|                    | *Annotate*    | that fact.                              |
+|--------------------+---------------+-----------------------------------------|
+| Variable numbering | Side effect   | Traverse the AST,                       |
+|                    | *Analysis*    |                                         |
+|--------------------+---------------+-----------------------------------------|
+| Renamer generation | Side effect   |                                         |
+|                    | *Analysis*    |                                         |
+|--------------------+---------------+-----------------------------------------|
+| Alpha renaming     | ~AST~         | Number each variable name and create    |
+|                    |               | a deterministic finite automaton        |
+|                    |               | that will crawl the AST and replace     |
+|                    |               | each instance of a variable with its    |
+|                    |               | identification number.                  |
+|                    |               |                                         |
+|                    |               | Save the identification number to       |
+|                    |               | variable name mapping in a global       |
+|                    |               | store, so we can have sane error        |
+|                    | *Transform*   | messages later.                         |
+|--------------------+---------------+-----------------------------------------|
+| Scope analysis     | ~AST~         | Scan the program, determining the       |
+|                    |               | scope at every point a variable is      |
+|                    |               | referenced or introduced. Add this      |
+|                    | *Analysis*    | to a global table.                      |
+|--------------------+---------------+-----------------------------------------|
+|                    | ~AST~         |                                         |
+|                    | *Transform*   |                                         |
+|--------------------+---------------+-----------------------------------------|
+|                    |               |                                         |
+  
+** Type system
 
-### Let
+*** Let
 
 - I think we probably should not do let generalization. Obviously, we will have
   to have some structure capability of introducing polymorphic bound variables,
@@ -355,7 +447,7 @@
   - This view is supported in [this paper][dont-generalize-let].
 - On the other hand, it's definitely not clear how
 
-### Continuations
+*** Continuations
 
 - Luckily, `call-with-current-continuation` is quite rare in Guile.
   - It is only used a few times in the Guile compiler.
@@ -363,12 +455,12 @@
   quite a few times.
 - Perhaps we could type these with the [Cont monad][cont-monad].
 
-### Typeclasses
+*** Typeclasses
 
 - Relevant papers:
   - [Maintainable Type Classes for Haskell][maintain-tc]
 
-### Effects
+*** Effects
 
 - Should we go with monadic IO or uniqueness typing?
 - For layering of effects, should we use monad transformers, algebraic effects,
@@ -384,15 +476,15 @@
   - [The effects package in Hackage][hackage-effects]
   - [Labelled IO][hackage-lio]
 
-### Concurrency
+*** Concurrency
 
 - [Session Types Without Class][session-types-without-class]
 - [Implicit parallelism][implicit-parallelism] is interesting.
   - Needs higher-order specialization (defunctionalization) to be effective.
 
-## Typing Guile semantics
+** Typing Guile semantics
 
-### Functions
+*** Functions
 
 - Should functions be curried in the type system, despite not being curried in
   the operational semantics of Scheme?
@@ -401,7 +493,7 @@
   - There are a variety of ways to type keywords and rest arguments, most of
     which are listed [here][polyvariadic].
 
-### Objects
+*** Objects
 
 - I think we can mostly type GOOPS classes as being open type classes.
   - Basically, any time a class is declared, create a type class, and then add
@@ -414,15 +506,15 @@
 - Perhaps we could use [subtypes][subtyping]?
 - Related: [MLsub][mlsub].
 
-## Other decisions
+** Other decisions
 
-### Modules
+*** Modules
 
 - Should we bother typing modules?
 - The [1ML system][] is rather promising for typing modules.
 - [Backpack][] is also interesting and worth looking at.
 
-### Tooling
+*** Tooling
 
 - We should fix [guile-lint][]
 - We should make a usable terminal UI for Guile, à la [Elm][elm-errors].
@@ -440,132 +532,194 @@
   - It should generate all of the following files:
     - FIXME
 
-### Misc
+*** Misc
 
 - Relevant papers:
   - [Strong Static Type Checking for Functional Common Lisp][typing-clisp]
 
-[Tandoori]:
+#+LINK:
+  Tandoori
   http://gergo.erdi.hu/projects/tandoori/
-[1ML system]:
+#+LINK:
+  1ML system
   http://www.mpi-sws.org/~rossberg/1ml/
-[guile-lint]:
+#+LINK:
+  guile-lint
   http://user42.tuxfamily.org/guile-lint/
-[elm-errors]:
+#+LINK:
+  elm-errors
   http://elm-lang.org/blog/compiler-errors-for-humans
-[maintain-tc]:
+#+LINK:
+  maintain-tc
   http://ff32.host.cs.st-andrews.ac.uk/papers/hsym15.pdf
-[idris-uniq]:
+#+LINK:
+  idris-uniq
   http://idris.readthedocs.org/en/latest/reference/uniqueness-types.html
-[idris-alg]:
+#+LINK:
+  idris-alg
   http://eb.host.cs.st-andrews.ac.uk/drafts/effects.pdf
-[polyvariadic]:
+#+LINK:
+  polyvariadic
   http://okmij.org/ftp/Haskell/polyvariadic.html
-[boxes]:
+#+LINK:
+  boxes
   http://hackage.haskell.org/package/boxes
-[vty-ui]:
+#+LINK:
+  vty-ui
   http://hackage.haskell.org/package/vty-ui
-[brick]:
+#+LINK:
+  brick
   http://hackage.haskell.org/package/brick
-[exteff]:
+#+LINK:
+  exteff
   http://okmij.org/ftp/Haskell/extensible/exteff.pdf
-[more-exteff]:
+#+LINK:
+  more-exteff
   http://okmij.org/ftp/Haskell/extensible/more.pdf
-[rwh-monad-transformers]:
+#+LINK:
+  rwh-monad-transformers
   http://book.realworldhaskell.org/read/monad-transformers.html#id6594
-[Haskell]:
+#+LINK:
+  Haskell
   http://haskell.org
-[Typed Racket]:
+#+LINK:
+  Typed Racket
   http://docs.racket-lang.org/ts-guide/index.html
-[Typed Clojure]:
+#+LINK:
+  Typed Clojure
   http://github.com/clojure/core.typed
-[SML]:
+#+LINK:
+  SML
   http://sml-family.org
-[OCaml]:
+#+LINK:
+  OCaml
   http://caml.inria.fr/pub/docs/manual-ocaml/
-[derp]:
+#+LINK:
+  derp
   http://hackage.haskell.org/package/derp
-[prof-type]:
+#+LINK:
+  prof-type
   http://www.cs.umd.edu/projects/PL/druby/papers/druby-tr-4935.pdf
-[cont-monad]:
+#+LINK:
+  cont-monad
   http://hackage.haskell.org/package/mtl/docs/Control-Monad-Cont.html
-[hackage-effects]:
+#+LINK:
+  hackage-effects
   http://hackage.haskell.org/package/effects
-[hackage-lio]:
+#+LINK:
+  hackage-lio
   http://hackage.haskell.org/package/lio
-[guile-bool]:
+#+LINK:
+  guile-bool
   http://www.gnu.org/software/guile/manual/html_node/Booleans.html
-[guile-num]:
+#+LINK:
+  guile-num
   http://www.gnu.org/software/guile/manual/html_node/Numbers.html
-[guile-char]:
+#+LINK:
+  guile-char
   http://www.gnu.org/software/guile/manual/html_node/Characters.html
-[guile-str]:
+#+LINK:
+  guile-str
   http://www.gnu.org/software/guile/manual/html_node/Strings.html
-[guile-sym]:
+#+LINK:
+  guile-sym
   http://www.gnu.org/software/guile/manual/html_node/Symbols.html
-[guile-kw]:
+#+LINK:
+  guile-kw
   http://www.gnu.org/software/guile/manual/html_node/Keywords.html
-[guile-vec]:
+#+LINK:
+  guile-vec
   http://www.gnu.org/software/guile/manual/html_node/Vectors.html
-[guile-arr]:
+#+LINK:
+  guile-arr
   http://www.gnu.org/software/guile/manual/html_node/Arrays.html
-[guile-bv]:
+#+LINK:
+  guile-bv
   http://www.gnu.org/software/guile/manual/html_node/Bytevectors.html
-[guile-bits]:
+#+LINK:
+  guile-bits
   http://www.gnu.org/software/guile/manual/html_node/Bit-Vectors.html
-[catch-totality]:
+#+LINK:
+  catch-totality
   http://community.haskell.org/~ndm/catch/
-[liquid-haskell]:
+#+LINK:
+  liquid-haskell
   http://goto.ucsd.edu/~rjhala/liquid/haskell/blog/about
-[herbie]:
+#+LINK:
+  herbie
   http://herbie.uwplse.org
-[herbie-ghc]:
+#+LINK:
+  herbie-ghc
   http://github.com/mikeizbicki/HerbiePlugin
-[GADTs meet their match]:
+#+LINK:
+  GADTs meet their match
   http://research.microsoft.com/en-us/um/people/simonpj/papers/pattern-matching/gadtpm.pdf
-[z3-prover]:
+#+LINK:
+  z3-prover
   http://github.com/Z3Prover/z3
-[rosette]:
+#+LINK:
+  rosette
   http://homes.cs.washington.edu/~emina/rosette/guide/index.html
-[Backpack]:
+#+LINK:
+  Backpack
   http://plv.mpi-sws.org/backpack
-[implicit-parallelism]:
+#+LINK:
+  implicit-parallelism
   http://www.youtube.com/watch?v=UsU8h0WYemo
-[subtyping]:
+#+LINK:
+  subtyping
   http://www21.in.tum.de/~nipkow/pubs/aplas11.pdf
-[typing-clisp]:
+#+LINK:
+  typing-clisp
   ftp://ftp.cs.utexas.edu/pub/boyer/diss/akers.pdf
-[session-types-without-class]:
+#+LINK:
+  session-types-without-class
   http://users.eecs.northwestern.edu/~jesse/pubs/haskell-session-types/session08.pdf
-[mlsub]:
+#+LINK:
+  mlsub
   http://github.com/stedolan/mlsub
-[hermit]:
+#+LINK:
+  hermit
   http://hackage.haskell.org/package/hermit
-[typed-quote-antiquote]:
+#+LINK:
+  typed-quote-antiquote
   http://www.cs.ox.ac.uk/people/ralf.hinze/publications/Quote.pdf
-[dont-generalize-let]:
+#+LINK:
+  dont-generalize-let
   http://research.microsoft.com/en-us/um/people/simonpj/papers/constraints/let-gen.pdf
-[megaparsec]:
+#+LINK:
+  megaparsec
   http://hackage.haskell.org/package/megaparsec
-[nanopass-blog-1]:
+#+LINK:
+  nanopass-blog-1
   http://merrycomputing.blogspot.com/2015/08/a-nanopass-compiler-in-haskell.html
-[nanopass-blog-2]:
+#+LINK:
+  nanopass-blog-2
   http://merrycomputing.blogspot.com/2015/08/a-nanopass-compiler-in-haskell-part-2.html
-[nanopass-blog-3]:
+#+LINK:
+  nanopass-blog-3
   http://merrycomputing.blogspot.com/2015/09/a-nanopass-compiler-in-haskell-part-3.html
-[nanopass-blog-4]:
+#+LINK:
+  nanopass-blog-4
   http://merrycomputing.blogspot.com/2015/09/a-nanopass-compiler-in-haskell-part-4.html
-[nanopass-original]:
-  https://github.com/akeep/nanopass-framework
-[nanopass-racket]:
-  https://github.com/LeifAndersen/nanopass-framework-racket
-[data-types-a-la-carte]:
+#+LINK:
+  nanopass-original
+  http://github.com/akeep/nanopass-framework
+#+LINK:
+  nanopass-racket
+  http://github.com/LeifAndersen/nanopass-framework-racket
+#+LINK:
+  data-types-a-la-carte
   http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.101.4131
-[compdata]:
-  https://hackage.haskell.org/package/compdata
-[syb-papers]:
+#+LINK:
+  compdata
+  http://hackage.haskell.org/package/compdata
+#+LINK:
+  syb-papers
   http://research.microsoft.com/en-us/um/people/simonpj/papers/hmap/
-[variations-on-variants]:
+#+LINK:
+  variations-on-variants
   http://homepages.inf.ed.ac.uk/jmorri14/pubs/morris-haskell15-variants.pdf
-[typeclass-impl]:
+#+LINK:
+  typeclass-impl
   http://okmij.org/ftp/Computation/typeclass.html
